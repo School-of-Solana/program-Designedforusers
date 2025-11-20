@@ -1,95 +1,59 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/TzDKD5h9)
-![School of Solana](https://github.com/Ackee-Blockchain/school-of-solana/blob/master/.banner/banner.png?raw=true)
+# EventFlux – On-Chain Event Pass & Yield Vault
 
-## 📚Solana Program
-We are about halfway through the course, and you already have some experience with programming on Solana. It is time to create something on your own! You will be building a dApp that will serve as the culmination of everything you have learned so far. Feel free to implement whatever comes to your mind, (as long as it passes the requirements).
+EventFlux is a Solana dApp that lets organizers mint verifiable event passes, auto-deposit ticket proceeds into whitelisted yield vaults, and reward attendees with loyalty NFTs once they check in. The repository contains two workspaces:
 
-**This does not mean that the School of Solana is coming to an end just yet!** There are still several exciting lectures ahead, as well as one security related task.
+- `anchor_project/` – Anchor program + TypeScript tests
+- `frontend/` – Next.js 16 App Router UI with wallet adapter + React Query data layer
 
-### Task details
-This task consists of two parts:
-1. **Core of your dApp**
-    - A deployed Solana program.
-2. **Frontend**
-    - A simple frontend to interact with the dApp.
+## Quick Links
+- **Program ID (devnet)**: `Akk9YtTtkqG9K8PdbqtKd2k6zDF2egc8xnkdMWD2nvaU`
+- **Vault adapter program ID**: `9zDeQgUTkwW1X2xW9ZZcACToGt9Lzoz1nAm88PtMu912`
+- **IDL**: generated in `anchor_project/target/idl/anchor_project.json` and mirrored to `frontend/lib/eventflux-idl.json`
 
-### Requirements
-- An Anchor program deployed on **Devnet** or **Mainnet**.
-- The Anchor program must use a PDA (Program Derived Address).
-- At least one TypeScript **test** for each Anchor program instruction. These tests should cover both **happy** and **unhappy** (intentional error-triggering) scenarios.
-- A simple **frontend** deployed using your preferred provider (for more info, check below).
-- A filled out **PROJECT_DESCRIPTION.md** file.
+## Running the Anchor workspace
+```bash
+cd anchor_project
+# compile the Anchor + vault stub programs
+echo "Ensure the Solana SBF SDK is installed"  # helper note
+SBF_SDK_PATH=$HOME/.local/share/solana/install/releases/v1.18.20/solana-release/bin/sdk/sbf anchor build
 
-### Ideas
-We highly recommend starting with something simple. Take time to think through your project and work on it in iterations. Do not try to implement everything at once!
+# run the full mocha + validator suite (uses COPYFILE_DISABLE to avoid macOS resource forks)
+COPYFILE_DISABLE=1 SBF_SDK_PATH=$HOME/.local/share/solana/install/releases/v1.18.20/solana-release/bin/sdk/sbf anchor test
+```
+Tests cover happy + failure paths for create_event, mint_pass, check_in, withdraw_treasury, harvest_yield, and issue_loyalty_nft using the in-repo vault stub CPI.
 
-Below is a list of few ideas to get you started:
-- **Social app**
-    - Instagram
-    - Giphy
-    - Friendtech
-    - Spotify
-- **Blog**
-- **Voting** ([D21 - Janeček method](https://www.ih21.org/en/guidelines))
-- **DeFi**
-    - Raffles
-    - Escrow
-    - Tipping
-    - Lending ([Save Documentation](https://docs.save.finance/))
-    - Liquid Staking ([Marinade Documentation](https://docs.marinade.finance/))
-    - Data Query with Pyth ([Pyth Documentation](https://docs.pyth.network/price-feeds))
-    - AMM ([Raydium Documentation](https://raydium.gitbook.io/raydium/))
-- **Gaming**
-    - Browser Game ([Gaming on Solana](https://solanacookbook.com/gaming/nfts-in-games.html#nfts-in-games))
+## Running the frontend demo
+```bash
+cd frontend
+cp .env.example .env.local  # edit RPC + program IDs if needed
+npm install
+npm run dev
+```
+Open http://localhost:3000, connect a devnet wallet (Phantom/Solflare/Backpack/Torus supported), and use:
+1. **Organizer cockpit** – prepares and sends `create_event` with PDA derivations + default tiers.
+2. **Attendee view** – executes `mint_pass` on live events (UI falls back to curated placeholders if no events exist).
 
-### Deadline
-The deadline for this task is **Wednesday, November 19th, at 23:59 UTC**.
->[!CAUTION]
->Note that we will not accept submissions after the deadline.
+The dashboard uses React Query to hydrate Event/Vault accounts on devnet and surfaces aggregate deposit/yield stats. Additional flows (check-in, withdraw, Solana Pay QR) are stubbed for roadmap visibility in the UI copy.
 
-### Submission
-There are two folders, one for the Anchor project, and one for the frontend. Push your changes to the **main** branch of **this** repository.
+## Repository Structure
+```
+anchor_project/
+  programs/anchor_project/…   # core program logic
+  programs/vault_stub/…        # mocked CPI target for yield harvesting
+  tests/anchor_project.ts      # mocha + AnchorProvider tests
+frontend/
+  app/                         # Next.js App Router pages
+  components/                  # landing + dashboard UI, providers, shared widgets
+  lib/                         # Anchor IDL, PDA helpers, hooks
+  public/                      # static assets (logos, QR art, etc.)
+PROJECT_DESCRIPTION.md         # filled submission template
+```
 
->[!IMPORTANT]
->It is essential that you fill out the `PROJECT_DESCRIPTION.md` template completely and accurately. This document will be used by AI for the initial evaluation, so provide detailed information about your project, including working links, clear descriptions, and technical implementation details.
+## Deployment status
+- Anchor program + vault stub deployed to devnet (see IDs above)
+- Frontend: currently demoed via local dev server; Vercel deployment pending once final polish/QA completes
 
->[!NOTE]
->Your submission repository is public. Feel free to share the link to showcase your work!
-
-### Evaluation
-The evaluation process is based on the **requirements**. If you meet the requirements, you pass the task!
-
->[!NOTE]
->The first round of evaluations will be conducted by AI to verify requirements before manual review. AI can make mistakes. If you believe you fulfilled all requirements but weren't graded correctly, please create a support ticket and we will resolve the issue.
-
->[!CAUTION]
->We expect original work that demonstrates your understanding and creativity. While you may draw inspiration from examples covered in lessons and tasks, **direct copying is not acceptable**. If you choose to build upon an example from the School of Solana materials, you must significantly expand it with additional features, instructions, and functionality to showcase your learning progress. 
-
-### Example Workflow
-Let's say you are going to implement the Twitter dApp as the Solana Program. Here's how the steps could look:
-
-**1.** Implement Twitter dApp using the Anchor framework.
-
-**2.** Test the Twitter dApp using the Anchor framework.
-
-**3.** Deploy the Twitter dApp on the Solana Devnet.
-
-**4.** Using the create solana dapp template, implement frontend for the Twitter dApp.
-
-**5.** Publish Frontend using [Vercel](https://vercel.com). Ensure the deployment is publicly accessible.
-
-**6.** Fill out the PROJECT_DESCRIPTION.md template.
-
-**7.** Submit the Twitter dApp using GitHub Classroom.
-
-### Useful Links
-- [Vercel](https://vercel.com)
-- [Create Solana Dapp](https://github.com/solana-foundation/create-solana-dapp)
-- [Account Macro Constraints](https://docs.rs/anchor-lang/0.31.1/anchor_lang/derive.Accounts.html)
-- [Solana Developers Courses](https://solana.com/developers/courses)
-
------
-
-### Need help?
->[!TIP]
->If you have any questions, feel free to reach out to us on [Discord](https://discord.gg/z3JVuZyFnp).
+## Future enhancements
+- Hook up `check_in`, `withdraw_treasury`, `harvest_yield`, and `issue_loyalty_nft` buttons directly from the UI
+- Add Solana Pay QR experience for verifiers + deep-link to pass owners
+- Capture production screenshots/video and publish the Next.js app to Vercel
