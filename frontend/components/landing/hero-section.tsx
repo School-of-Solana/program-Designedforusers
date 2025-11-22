@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { Button } from "@/components/ui/button";
 import { WalletButton } from "@/components/ui/wallet-button";
@@ -37,9 +38,12 @@ export const HeroSection = () => {
             organizers close the loop with loyalty NFTs — all from one glassy dashboard.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Button className="bg-white text-slate-900 px-6 py-3 text-sm font-bold">
+            <Link
+              href="/events"
+              className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition hover:bg-white/90"
+            >
               Explore Event Pipeline
-            </Button>
+            </Link>
             <Button className="border-white/30 bg-transparent px-6 py-3 text-sm font-semibold">
               Watch the Vault Flywheel
             </Button>

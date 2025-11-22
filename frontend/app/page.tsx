@@ -3,7 +3,7 @@ import { StatGrid } from "@/components/landing/stat-grid";
 import { YieldTimeline } from "@/components/landing/yield-timeline";
 import { OrganizerPanel } from "@/components/dashboard/organizer-panel";
 import { AttendeePanel } from "@/components/dashboard/attendee-panel";
-import { PassManager } from "@/components/dashboard/pass-manager";
+import { VerifierPanel } from "@/components/dashboard/verifier-panel";
 import { TreasuryPanel } from "@/components/dashboard/treasury-panel";
 import { SolanaPayPanel } from "@/components/dashboard/solana-pay-panel";
 
@@ -13,12 +13,12 @@ export default function Home() {
       <HeroSection />
       <StatGrid />
       <YieldTimeline />
-      <section className="grid gap-6 lg:grid-cols-2">
+      <section id="attendee" className="grid gap-6 lg:grid-cols-2">
         <OrganizerPanel />
         <AttendeePanel />
       </section>
       <section className="grid gap-6 lg:grid-cols-2">
-        <PassManager />
+        <VerifierPanel />
         <TreasuryPanel />
       </section>
       <SolanaPayPanel />

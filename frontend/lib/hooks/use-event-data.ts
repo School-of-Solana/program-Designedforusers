@@ -33,6 +33,8 @@ export const useEventFeed = () => {
           tier: tier.label,
           price: lamportsToSol(Number(tier.priceLamports)),
           available: Number(tier.maxSupply - tier.sold),
+          maxSupply: Number(tier.maxSupply),
+          sold: Number(tier.sold),
         })),
         strategy: account.yieldStrategy.__kind ?? "Strategy",
       }));
