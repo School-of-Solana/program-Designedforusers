@@ -63,7 +63,8 @@ export const TreasuryPanel = () => {
   const [mintPreview, setMintPreview] = useState<{ name: string; image: string; count: number } | null>(null);
 
   const sortedEvents = useMemo(
-    () => events?.sort((a, b) => Number(b.account.startTs) - Number(a.account.startTs)) ?? [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    () => events?.sort((a: any, b: any) => Number(b.account.startTs) - Number(a.account.startTs)) ?? [],
     [events]
   );
 
@@ -201,8 +202,10 @@ export const TreasuryPanel = () => {
         ];
         const fetched = await program.account.eventPass.all(filters);
         const eligible = fetched
-          .filter(({ account }) => account.checkedIn && !account.loyaltyMint)
-          .map(({ publicKey, account }) => ({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .filter(({ account }: any) => account.checkedIn && !account.loyaltyMint)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map(({ publicKey, account }: any) => ({
             publicKey,
             owner: account.owner as PublicKey,
             event: account.event as PublicKey,
@@ -210,7 +213,7 @@ export const TreasuryPanel = () => {
           }));
 
         setLoyaltyPasses(eligible);
-        setRewardSelection(new Set(eligible.map((pass) => pass.publicKey.toBase58())));
+        setRewardSelection(new Set(eligible.map((pass: LoyaltyCandidate) => pass.publicKey.toBase58())));
         setLoyaltyStatus(
           eligible.length
             ? "Select attendees to airdrop POAPs."
@@ -327,12 +330,15 @@ export const TreasuryPanel = () => {
       </header>
       <div className="space-y-3">
         {sortedEvents.length ? (
-          sortedEvents.map(({ publicKey, account }) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          sortedEvents.map(({ publicKey, account }: any) => {
             const eventPk = publicKey as PublicKey;
             const vaultStatePk = new PublicKey(account.vaultState);
             const strategyKind = account.yieldStrategy.__kind ?? "None";
-            const sold = account.tiers.reduce((sum, tier) => sum + Number(tier.sold ?? 0), 0);
-            const maxSupply = account.tiers.reduce((sum, tier) => sum + Number(tier.maxSupply ?? 0), 0);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const sold = account.tiers.reduce((sum: number, tier: any) => sum + Number(tier.sold ?? 0), 0);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const maxSupply = account.tiers.reduce((sum: number, tier: any) => sum + Number(tier.maxSupply ?? 0), 0);
 
             return (
               <div

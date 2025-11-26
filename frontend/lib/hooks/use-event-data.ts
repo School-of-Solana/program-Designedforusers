@@ -20,7 +20,8 @@ export const useEventFeed = () => {
       }
 
       const events = await program.account.event.all();
-      return events.map(({ publicKey, account }) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return events.map(({ publicKey, account }: any) => ({
         publicKey: publicKey.toBase58(),
         name: account.name,
         venue: account.venue,
@@ -28,9 +29,10 @@ export const useEventFeed = () => {
         end: new Date(Number(account.endTs) * 1000).toISOString(),
         organizer: new PublicKey(account.organizer).toBase58(),
         totalPasses: Number(account.totalPasses),
-        tiers: account.tiers.map((tier) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tiers: account.tiers.map((tier: any) => ({
           tierId: tier.tierId,
-          tier: tier.label,
+          label: tier.label,
           price: lamportsToSol(Number(tier.priceLamports)),
           available: Number(tier.maxSupply - tier.sold),
           maxSupply: Number(tier.maxSupply),

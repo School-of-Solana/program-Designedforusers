@@ -135,8 +135,8 @@ export default function EventsPage() {
                 </p>
                 <div className="mt-3 grid gap-3 text-sm md:grid-cols-2">
                   {event.tiers.map((tier) => (
-                    <div key={tier.tier} className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <p className="text-xs uppercase text-white/50">{tier.tier}</p>
+                    <div key={tier.label} className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                      <p className="text-xs uppercase text-white/50">{tier.label}</p>
                       <p className="text-lg font-semibold text-white">{tier.price} ◎</p>
                       <p className="text-xs text-white/50">{tier.available} available</p>
                     </div>

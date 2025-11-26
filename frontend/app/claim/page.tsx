@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import BN from "bn.js";
 import { useSearchParams } from "next/navigation";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
@@ -27,6 +27,27 @@ type AnchorTier = {
 };
 
 export default function ClaimPage() {
+  return (
+    <Suspense fallback={<ClaimPageFallback />}>
+      <ClaimPageContent />
+    </Suspense>
+  );
+}
+
+function ClaimPageFallback() {
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 py-6">
+      <GradientCard className="space-y-6">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Guest claim</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white">Loading...</h1>
+        </div>
+      </GradientCard>
+    </div>
+  );
+}
+
+function ClaimPageContent() {
   const searchParams = useSearchParams();
   const eventParam = searchParams.get("event");
   const tierParam = Number(searchParams.get("tier") ?? "1");
@@ -44,11 +65,17 @@ export default function ClaimPage() {
     if (!program || !eventParam) {
       return;
     }
+    let eventPk: PublicKey;
+    try {
+      eventPk = new PublicKey(eventParam);
+    } catch {
+      setStatus("Invalid event address format.");
+      return;
+    }
     let cancelled = false;
     setLoadingEvent(true);
     (async () => {
       try {
-        const eventPk = new PublicKey(eventParam);
         const account = await program.account.event.fetch(eventPk);
         if (cancelled) {
           return;
@@ -95,10 +122,16 @@ export default function ClaimPage() {
       setStatus("Missing event or tier context.");
       return;
     }
+    let eventPk: PublicKey;
+    try {
+      eventPk = new PublicKey(eventParam);
+    } catch {
+      setStatus("Invalid event address format.");
+      return;
+    }
     setPending(true);
     setStatus("Broadcasting mint_pass…");
     try {
-      const eventPk = new PublicKey(eventParam);
       const eventAccount = await program.account.event.fetch(eventPk);
       const vaultStatePk = new PublicKey(eventAccount.vaultState);
       const vaultTreasury = await getVaultTreasuryPda(eventPk);

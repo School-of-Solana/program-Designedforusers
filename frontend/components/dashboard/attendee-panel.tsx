@@ -9,9 +9,11 @@ import QRCode from "react-qr-code";
 import { useClipboard } from "use-clipboard-copy";
 import { Button } from "@/components/ui/button";
 import { GradientCard } from "@/components/ui/gradient-card";
+import { TransactionStatus } from "@/components/ui/transaction-status";
 import { useEventFeed } from "@/lib/hooks/use-event-data";
 import { useEventFluxProgram } from "@/lib/hooks/use-eventflux-program";
 import { useWalletPasses } from "@/lib/hooks/use-wallet-passes";
+import { useTransaction } from "@/lib/hooks/use-transaction";
 import { getEventPassPda, getVaultTreasuryPda } from "@/lib/pdas";
 import type { UiEvent } from "@/lib/placeholders";
 
@@ -22,8 +24,8 @@ export const AttendeePanel = () => {
   const { program } = useEventFluxProgram();
   const queryClient = useQueryClient();
   const clipboard = useClipboard();
-  const [status, setStatus] = useState<string | null>(null);
-  const [isMinting, setIsMinting] = useState(false);
+  const mintTx = useTransaction();
+  const checkInTx = useTransaction();
   const [pendingPass, setPendingPass] = useState<string | null>(null);
   const [qrModal, setQrModal] = useState<{
     pass: PublicKey;
@@ -46,72 +48,71 @@ export const AttendeePanel = () => {
   const handleMint = useCallback(
     async (eventAddress: string, tierId: number) => {
       if (!wallet.connected || !wallet.publicKey || !program) {
-        setStatus("Connect wallet to mint passes.");
         return;
       }
-      setIsMinting(true);
-      setStatus("Sending transaction to mint pass...");
-      try {
-        const eventPk = new PublicKey(eventAddress);
-        const eventAccount = await program.account.event.fetch(eventPk);
-        const vaultStatePk = new PublicKey(eventAccount.vaultState);
-        const vaultTreasury = await getVaultTreasuryPda(eventPk);
-        const eventPass = await getEventPassPda(eventPk, wallet.publicKey, tierId);
 
-        await program.methods
-          .mintPass(tierId)
-          .accounts({
-            attendee: wallet.publicKey,
-            event: eventPk,
-            vaultState: vaultStatePk,
-            vaultTreasury,
-            eventPass,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc();
+      await mintTx.execute(
+        async () => {
+          const eventPk = new PublicKey(eventAddress);
+          const eventAccount = await program.account.event.fetch(eventPk);
+          const vaultStatePk = new PublicKey(eventAccount.vaultState);
+          const vaultTreasury = await getVaultTreasuryPda(eventPk);
+          const eventPass = await getEventPassPda(eventPk, wallet.publicKey!, tierId);
 
-        await queryClient.invalidateQueries({ queryKey: ["eventflux"] });
-        setStatus("Pass minted! Check the loyalty tab after check-in.");
-      } catch (error) {
-        console.error(error);
-        setStatus("Failed to mint pass. See console for details.");
-      } finally {
-        setIsMinting(false);
-      }
+          return program.methods
+            .mintPass(tierId)
+            .accounts({
+              attendee: wallet.publicKey!,
+              event: eventPk,
+              vaultState: vaultStatePk,
+              vaultTreasury,
+              eventPass,
+              systemProgram: SystemProgram.programId,
+            })
+            .rpc();
+        },
+        {
+          onConfirmed: () => {
+            queryClient.invalidateQueries({ queryKey: ["eventflux"] });
+          },
+        }
+      );
     },
-    [wallet.connected, wallet.publicKey, program, queryClient]
+    [wallet.connected, wallet.publicKey, program, queryClient, mintTx]
   );
 
   const handleSelfCheckIn = useCallback(
     async (passPk: PublicKey, eventPk: PublicKey) => {
       if (!wallet.connected || !wallet.publicKey || !program) {
-        setStatus("Connect wallet to check in.");
         return;
       }
       setPendingPass(passPk.toBase58());
-      setStatus("Submitting check-in...");
-      try {
-        await program.methods
-          .checkIn()
-          .accounts({
-            verifier: wallet.publicKey,
-            event: eventPk,
-            eventPass: passPk,
-          })
-          .rpc();
 
-        await queryClient.invalidateQueries({
-          queryKey: ["eventflux", "passes", wallet.publicKey.toBase58()],
-        });
-        setStatus("Pass checked in! Loyalty NFTs unlock post-event.");
-      } catch (error) {
-        console.error(error);
-        setStatus("Check-in failed. Ensure the event is live.");
-      } finally {
-        setPendingPass(null);
-      }
+      await checkInTx.execute(
+        async () => {
+          return program.methods
+            .checkIn()
+            .accounts({
+              verifier: wallet.publicKey!,
+              event: eventPk,
+              eventPass: passPk,
+            })
+            .rpc();
+        },
+        {
+          onConfirmed: () => {
+            queryClient.invalidateQueries({
+              queryKey: ["eventflux", "passes", wallet.publicKey!.toBase58()],
+            });
+            setPendingPass(null);
+          },
+          onFailed: () => {
+            setPendingPass(null);
+          },
+        }
+      );
     },
-    [wallet.connected, wallet.publicKey, program, queryClient]
+    [wallet.connected, wallet.publicKey, program, queryClient, checkInTx]
   );
 
   const openPassQr = useCallback(
@@ -176,10 +177,10 @@ export const AttendeePanel = () => {
               </div>
               <Button
                 className="bg-white text-slate-900 px-4 py-2 text-xs font-semibold"
-                disabled={!wallet.connected || !program || isMinting || !event.tiers.length}
+                disabled={!wallet.connected || !program || mintTx.isLoading || !event.tiers.length}
                 onClick={() => handleMint(event.publicKey, event.tiers[0]?.tierId ?? 1)}
               >
-                {wallet.connected ? (isMinting ? "Minting..." : "Mint pass") : "Connect to mint"}
+                {wallet.connected ? (mintTx.isLoading ? "Minting..." : "Mint pass") : "Connect to mint"}
               </Button>
             </div>
             <div className="mt-3 flex flex-wrap gap-4 text-xs text-white/60">
@@ -190,14 +191,14 @@ export const AttendeePanel = () => {
             </div>
             <div className="mt-3 grid gap-2 text-sm text-white/80 md:grid-cols-3">
               {event.tiers.map((tier, index) => (
-                <div key={tier.tier} className="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
-                  <p className="text-xs uppercase text-white/50">{tier.tier}</p>
+                <div key={tier.label} className="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
+                  <p className="text-xs uppercase text-white/50">{tier.label}</p>
                   <p className="text-base font-semibold">{tier.price} ◎</p>
                   <p className="text-xs text-white/50">{tier.available} left</p>
                   <Button
                     type="button"
                     className="mt-2 w-full bg-white/20 px-3 py-1 text-[11px]"
-                    disabled={!wallet.connected || !program || isMinting}
+                    disabled={!wallet.connected || !program || mintTx.isLoading}
                     onClick={() => handleMint(event.publicKey, tier.tierId ?? index + 1)}
                   >
                     {wallet.connected ? "Mint" : "Connect"}
@@ -218,7 +219,8 @@ export const AttendeePanel = () => {
         </div>
         <div className="mt-3 space-y-3">
           {passes?.length ? (
-            passes.map(({ publicKey, account }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            passes.map(({ publicKey, account }: any) => {
               const eventInfo = eventMap.get(account.event.toBase58());
               return (
                 <div
@@ -295,7 +297,25 @@ export const AttendeePanel = () => {
           </div>
         </div>
       )}
-      {status && <p className="text-xs text-white/60">{status}</p>}
+      {/* Transaction Status */}
+      {mintTx.status !== "idle" && (
+        <TransactionStatus
+          status={mintTx.status}
+          signature={mintTx.signature}
+          error={mintTx.error}
+          suggestedAction={mintTx.errorDetails?.suggestedAction}
+          onDismiss={mintTx.reset}
+        />
+      )}
+      {checkInTx.status !== "idle" && (
+        <TransactionStatus
+          status={checkInTx.status}
+          signature={checkInTx.signature}
+          error={checkInTx.error}
+          suggestedAction={checkInTx.errorDetails?.suggestedAction}
+          onDismiss={checkInTx.reset}
+        />
+      )}
     </GradientCard>
   );
 };

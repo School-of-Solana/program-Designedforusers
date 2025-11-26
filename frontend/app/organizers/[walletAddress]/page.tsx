@@ -29,7 +29,8 @@ const useOrganizerProfile = (address?: string) => {
       ];
       const events = await program.account.event.all(filters);
       const enriched = await Promise.all(
-        events.map(async ({ publicKey, account }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        events.map(async ({ publicKey, account }: any) => {
           const vaultStatePk = new PublicKey(account.vaultState);
           const vaultState = await program.account.vaultState.fetch(vaultStatePk);
           return { publicKey, account, vaultState };

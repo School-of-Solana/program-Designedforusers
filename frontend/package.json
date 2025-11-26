@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bn.js": "^5.2.0",
     "@types/gsap": "^3.0.0",
     "@types/node": "^20",
     "@types/react": "^19",

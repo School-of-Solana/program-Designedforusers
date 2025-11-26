@@ -8,14 +8,15 @@ import {
   SolflareWalletAdapter,
   TorusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
-import { rpcEndpoint } from "@/lib/env";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { rpcEndpoint, solanaNetwork } from "@/lib/env";
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export const SolanaProvider = ({ children }: PropsWithChildren) => {
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
-      new SolflareWalletAdapter({ network: "devnet" }),
+      new SolflareWalletAdapter({ network: solanaNetwork as WalletAdapterNetwork }),
       new TorusWalletAdapter(),
     ],
     []

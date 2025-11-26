@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -36,6 +36,27 @@ const parseSolanaUrl = (raw: string) => {
 };
 
 export default function VerifyPage() {
+  return (
+    <Suspense fallback={<VerifyPageFallback />}>
+      <VerifyPageContent />
+    </Suspense>
+  );
+}
+
+function VerifyPageFallback() {
+  return (
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 py-6">
+      <GradientCard className="space-y-6">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Verifier scanner</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white">Loading...</h1>
+        </div>
+      </GradientCard>
+    </div>
+  );
+}
+
+function VerifyPageContent() {
   const searchParams = useSearchParams();
   const wallet = useWallet();
   const { program } = useEventFluxProgram();
@@ -86,6 +107,15 @@ export default function VerifyPage() {
       setStatus("Event + pass PDA required.");
       return;
     }
+    let eventPk: PublicKey;
+    let passPk: PublicKey;
+    try {
+      eventPk = new PublicKey(formState.event);
+      passPk = new PublicKey(formState.pass);
+    } catch {
+      setStatus("Invalid public key format. Check event/pass addresses.");
+      return;
+    }
     setPending(true);
     setStatus("Dispatching check_in instruction…");
     try {
@@ -93,8 +123,8 @@ export default function VerifyPage() {
         .checkIn()
         .accounts({
           verifier: wallet.publicKey,
-          event: new PublicKey(formState.event),
-          eventPass: new PublicKey(formState.pass),
+          event: eventPk,
+          eventPass: passPk,
         })
         .rpc();
 

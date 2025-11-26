@@ -20,7 +20,8 @@ export const useVaultPulse = () => {
 
       const vaultStates = await program.account.vaultState.all();
       const aggregate = vaultStates.reduce(
-        (acc, { account }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (acc: { deposited: number; withdrawn: number; yield: number }, { account }: any) => {
           acc.deposited += Number(account.totalDeposited);
           acc.withdrawn += Number(account.totalWithdrawn);
           acc.yield += Number(account.totalYieldHarvested);

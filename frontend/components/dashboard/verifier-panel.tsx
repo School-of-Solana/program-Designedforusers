@@ -116,7 +116,8 @@ export const VerifierPanel = () => {
           },
         ];
         const fetched = await program.account.eventPass.all(filters);
-        passes = fetched.map(({ publicKey, account }) => shapeRecord(publicKey, account));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        passes = fetched.map(({ publicKey, account }: any) => shapeRecord(publicKey, account));
       } else {
         const passPk = new PublicKey(trimmed);
         const account = await program.account.eventPass.fetch(passPk);

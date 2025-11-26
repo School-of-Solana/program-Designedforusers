@@ -10,7 +10,7 @@ export type UiEvent = {
   totalPasses: number;
   tiers: Array<{
     tierId?: number;
-    tier: string;
+    label: string;
     price: number;
     available: number;
     maxSupply?: number;
@@ -29,8 +29,8 @@ export const placeholderEvents: UiEvent[] = [
     organizer: "EventFlux Labs",
     totalPasses: 420,
     tiers: [
-      { tierId: 1, tier: "GA", price: 0.5, available: 120, maxSupply: 200, sold: 80 },
-      { tierId: 2, tier: "VIP", price: 1.5, available: 30, maxSupply: 60, sold: 30 },
+      { tierId: 1, label: "GA", price: 0.5, available: 120, maxSupply: 200, sold: 80 },
+      { tierId: 2, label: "VIP", price: 1.5, available: 30, maxSupply: 60, sold: 30 },
     ],
     strategy: "Kamino auto-compound",
   },
@@ -43,8 +43,8 @@ export const placeholderEvents: UiEvent[] = [
     organizer: "Proof of Vibes",
     totalPasses: 128,
     tiers: [
-      { tierId: 1, tier: "Builder", price: 0.25, available: 42, maxSupply: 100, sold: 58 },
-      { tierId: 2, tier: "Protocol", price: 0.9, available: 16, maxSupply: 40, sold: 24 },
+      { tierId: 1, label: "Builder", price: 0.25, available: 42, maxSupply: 100, sold: 58 },
+      { tierId: 2, label: "Protocol", price: 0.9, available: 16, maxSupply: 40, sold: 24 },
     ],
     strategy: "Sanctum liquid staking",
   },

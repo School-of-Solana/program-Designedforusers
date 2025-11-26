@@ -4,6 +4,11 @@ import idl from "./eventflux-idl.json" assert { type: "json" };
 export const rpcEndpoint =
   process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
 
+export const solanaNetwork = (process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? "devnet") as
+  | "devnet"
+  | "testnet"
+  | "mainnet-beta";
+
 export const programId = new PublicKey(
   process.env.NEXT_PUBLIC_EVENTFLUX_PROGRAM_ID ?? (idl as { address: string }).address
 );

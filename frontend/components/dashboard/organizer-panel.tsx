@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { FormEvent, useMemo, useState } from "react";
 import BN from "bn.js";
 import { SystemProgram, LAMPORTS_PER_SOL, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
@@ -176,7 +174,7 @@ export const OrganizerPanel = () => {
           {events?.map((event) => (
             <div key={event.publicKey} className="flex items-center justify-between text-xs text-white/70">
               <span>{event.name}</span>
-              <span>{new Date(event.start).toLocaleDateString()} · {event.tiers[0]?.tier}</span>
+              <span>{new Date(event.start).toLocaleDateString()} · {event.tiers[0]?.label}</span>
             </div>
           ))}
         </div>

@@ -109,7 +109,7 @@ export default function EventDetailPage() {
   const endTs = Number(account.endTs) * 1000;
   const countdown = formatCountdown(now, startTs, endTs);
   const organizer = (account.organizer as PublicKey).toBase58();
-  const verifiers = account.authorizedVerifiers.map((pk: PublicKey) => pk.toBase58());
+  const verifiers: string[] = account.authorizedVerifiers.map((pk: PublicKey) => pk.toBase58());
   const stats = [
     { label: "Passes Minted", value: Number(account.totalPasses) },
     { label: "Deposited", value: `${(Number(vaultState.totalDeposited) / 1_000_000_000).toFixed(2)} ◎` },
